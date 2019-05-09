@@ -12,7 +12,6 @@ ismaelScribe,AdokaHelp
 HiilBrook,AdokaHelp
 ChienEtCo,AdokaHelp
 JjamesLoyar,AdokaHelp
-OnAirWithRick,AdokaHelp
 MoniTorres_Team,AdokaHelp
 PASFAB0911,AdokaHelp
 themellogangz,AdokaHelp

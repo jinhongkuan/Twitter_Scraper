@@ -11,13 +11,13 @@ import os
 
 ###### CONFIG VARIABLES - Changeable Parameters
 
-max_threads = 5
+max_threads = 10
 max_level = 2
 
 #######
 
 headers = {'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'}
-thread_follower_counts = [0, 0, 0, 0, 0]
+thread_follower_counts = [0] * max_threads
 all_done = {}
 
 def main():
@@ -65,14 +65,14 @@ def main():
 
                 follower_index += 1
                 print("Total nodes processed = ", len(all_done))
-                print("Total edges seen = ", seen)
+                # print("Total edges seen = ", seen)
                 break
           else:
             follower_index += 1
                 
         except KeyboardInterrupt:
           print("Total nodes processed = ", len(all_done))
-          print("Total edges seen = ", seen + sum(thread_follower_counts))
+          # print("Total edges seen = ", seen + sum(thread_follower_counts))
           raise Exception("Kill")  
 
     for thread_num in range(max_threads):
