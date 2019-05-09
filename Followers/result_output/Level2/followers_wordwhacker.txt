@@ -318,6 +318,7 @@ Sreekan28316707,wordwhacker
 NataliiaKis,wordwhacker
 cre8boston,wordwhacker
 Sanemavcil,wordwhacker
+Sanemavcil,wordwhacker
 mmedry,wordwhacker
 christaylor_nyc,wordwhacker
 WhartonSchoolPR,wordwhacker
@@ -2738,7 +2739,6 @@ eMediaDesignCo,wordwhacker
 mossappeal,wordwhacker
 EricaShmerrica,wordwhacker
 infographicsguy,wordwhacker
-infographicsguy,wordwhacker
 vikingruten,wordwhacker
 Group_Liam,wordwhacker
 MuhammadMaira13,wordwhacker
@@ -3518,7 +3518,6 @@ sm68584,wordwhacker
 GnysGnys,wordwhacker
 EI_CJimeson,wordwhacker
 ekjeacheblog,wordwhacker
-ekjeacheblog,wordwhacker
 AllthingsIC,wordwhacker
 paolopugni,wordwhacker
 marpmc,wordwhacker
@@ -4038,7 +4037,6 @@ DrNikakhtar,wordwhacker
 Buzzalot,wordwhacker
 Circussauce,wordwhacker
 vicbrain,wordwhacker
-vicbrain,wordwhacker
 JafraLadyLisa,wordwhacker
 richardmclemore,wordwhacker
 anonline_income,wordwhacker
@@ -4135,7 +4133,6 @@ ezmitchell,wordwhacker
 BariJLee,wordwhacker
 zudepr,wordwhacker
 Dani_Booth,wordwhacker
-ImageMindedSF,wordwhacker
 IMTLucca,wordwhacker
 metalgearusa,wordwhacker
 valethebrunette,wordwhacker
@@ -5357,6 +5354,7 @@ JudyBellem,wordwhacker
 JenOsuch,wordwhacker
 Al1970Da,wordwhacker
 kennethtang,wordwhacker
+dontdieangry,wordwhacker
 ashton99,wordwhacker
 sgaughen,wordwhacker
 SellwithHumor,wordwhacker
@@ -7258,7 +7256,6 @@ TaylorHomes,wordwhacker
 padma_mohan,wordwhacker
 LovelyLauraC,wordwhacker
 JanelElaine,wordwhacker
-DragonflySoc,wordwhacker
 noellefredland,wordwhacker
 LA_Thom10,wordwhacker
 Countmein,wordwhacker

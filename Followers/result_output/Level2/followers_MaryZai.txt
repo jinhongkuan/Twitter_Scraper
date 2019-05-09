@@ -31,7 +31,6 @@ kevinfitton,MaryZai
 RANNNLIVE,MaryZai
 WALEWILLIAMS17,MaryZai
 rhlewisbooks,MaryZai
-sovietw1tch,MaryZai
 keff85,MaryZai
 s_j_atkinson,MaryZai
 sophsa,MaryZai
@@ -296,7 +295,6 @@ aliiina_24,MaryZai
 aprajit_kar,MaryZai
 melody324,MaryZai
 wisekristenwise,MaryZai
-marc_s_t,MaryZai
 trnsmttr,MaryZai
 hendekahedron,MaryZai
 KazimMomo,MaryZai

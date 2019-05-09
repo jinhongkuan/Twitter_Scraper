@@ -2,7 +2,6 @@ nathanmart,gilly_bean
 Classroom101pod,gilly_bean
 kevin_mc_l,gilly_bean
 NiallAlcock,gilly_bean
-Team_Twinkl,gilly_bean
 BBC_Teach,gilly_bean
 TeachingFrom,gilly_bean
 CAMHSNetwork,gilly_bean

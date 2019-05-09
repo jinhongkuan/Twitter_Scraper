@@ -1,3 +1,4 @@
+import time
 import threading
 import csv
 from os import listdir
@@ -7,12 +8,14 @@ from urllib.request import urlopen, Request
 import lxml.html
 import datetime
 import os
-# from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup
 
 ###### CONFIG VARIABLES - Changeable Parameters
 
 max_threads = 10
-max_level = 2
+max_level = 1
+max_retry = 10
+epsilon_follower_diff = 10
 
 #######
 
@@ -58,13 +61,13 @@ def main():
                 seen += thread_follower_counts[thread_num]
                 thread_follower_counts[thread_num] = 0
 
-                print("\nStart thread for: ", follower, " at ", str(datetime.datetime.now()))
+                # print("\nStart thread for: ", follower, " at ", str(datetime.datetime.now()))
                 threads[thread_num] = threading.Thread(target=generateFollowers, args=(follower, cur_level, log_file, thread_num))
                 threads[thread_num].start()
                 all_done[follower] = True
 
                 follower_index += 1
-                print("Total nodes processed = ", len(all_done))
+                # print("Total nodes processed = ", len(all_done))
                 # print("Total edges seen = ", seen)
                 break
           else:
@@ -72,6 +75,7 @@ def main():
                 
         except KeyboardInterrupt:
           print("Total nodes processed = ", len(all_done))
+          log_file.close()
           # print("Total edges seen = ", seen + sum(thread_follower_counts))
           raise Exception("Kill")  
 
@@ -81,19 +85,32 @@ def main():
 
   print("Total nodes processed = " + str(len(all_done)), file = log_file)
   print("Total edges seen = " + str(seen), file = log_file)
+  log_file.close()
 
 def generateFollowers(org, level, log_file, thread_num):
+  global max_retry
+  global epsilon_follower_diff
+
   # Open page
   link = "https://mobile.twitter.com/" + org + "/followers"  
   try:
     req = Request(link, headers=headers)
     page = urlopen(req)
     doc = lxml.html.fromstring(page.read())
+
+    # Extract number of followers for later verification
+    try:
+      num_followers = int(doc.xpath('//*[@id="main_content"]/div/div[1]/table/tr[2]/td/span/text()')[0].replace(',', ''))
+    except:
+      print("User is protected: ", org, file = log_file)
+      raise Exception("User is protected " + org)
+
     # Extract first 20 followers
     followers = doc.xpath('//span[@class="username"]/text()')[1:]
           
     # Click on Show More and continue till we get all followers
-    while(True):
+    error_count = 0
+    while(len(followers) < num_followers and error_count < max_retry):
       try:
         link = "https://mobile.twitter.com/" + doc.xpath('//*[@id="main_content"]/div/div[2]/div/a')[0].get('href')
         req = Request(link, headers=headers)
@@ -102,20 +119,18 @@ def generateFollowers(org, level, log_file, thread_num):
         doc = lxml.html.fromstring(page.read())
         followers += doc.xpath('//span[@class="username"]/text()')[1:]
       except:
-        # Exception might mean a) we have reached end or
-        #                      b) some type of timeout
-        # Therefore try once more to make sure we have collected all followers
-        try:
-          link = "https://mobile.twitter.com/" + doc.xpath('//*[@id="main_content"]/div/div[2]/div/a')[0].get('href')
-          req = Request(link, headers=headers)
-          page = urlopen(req)
-          doc = lxml.html.fromstring(page.read())
-          followers += doc.xpath('//span[@class="username"]/text()')[1:]
-        except Exception as e:
-          # If we had exception on the second try
-          # we can be confident that we have all followers
+        if(abs(len(followers) - num_followers) < epsilon_follower_diff):
           break
-      thread_follower_counts[thread_num-1] = len(followers)
+
+        printPage(req, "Error#" + str(error_count) + "_" + org)
+        error_count += 1
+        time.sleep(.025)
+        pass
+
+    if(abs(len(followers) - num_followers) > epsilon_follower_diff):
+      print("User not fully extracted ", org, len(followers), num_followers, link)
+      print("User not fully extracted ", org, len(followers), num_followers, link, file = log_file)
+      printPage(req, org)
 
     # Write followers to file
     with open("result_output/Level" + str(level) + "/followers_" + org + ".txt", mode='w', encoding="utf-8") as outptr:
@@ -130,12 +145,17 @@ def generateFollowers(org, level, log_file, thread_num):
     print("User does not exist anymore: ", org, file = log_file)
     return 0
 
-# def printPage(req):
-#   page = urlopen(req)
-#   soup = BeautifulSoup(page.read(), 'lxml')
-#   misc = open("error.html", "w")
-#   print(soup.prettify(), file = misc)
-#   misc.close() 
+  except:
+    return 0
+
+def printPage(req, name):
+  page = urlopen(req)
+  soup = BeautifulSoup(page.read(), 'lxml')
+  if not os.path.exists('ErrorFiles/'):
+    os.makedirs('ErrorFiles')
+  misc = open("ErrorFiles/" + name + ".html", "w")
+  print(soup.prettify(), file = misc)
+  misc.close() 
 
 if __name__=="__main__":
   main()

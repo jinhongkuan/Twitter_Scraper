@@ -1,3 +1,6 @@
+EvrySingleFrame,AmerSlkrPodcast
+americanwhiskyj,AmerSlkrPodcast
+TrueCrimeRecaps,AmerSlkrPodcast
 Unofficial_Gigi,AmerSlkrPodcast
 NXTFSLive,AmerSlkrPodcast
 187MurderAve,AmerSlkrPodcast
@@ -470,7 +473,6 @@ AzizKha20118581,AmerSlkrPodcast
 DremTGI,AmerSlkrPodcast
 beat_crime,AmerSlkrPodcast
 meddiebaddie,AmerSlkrPodcast
-GBEnglandGB,AmerSlkrPodcast
 felontruecrime,AmerSlkrPodcast
 EmilyyyTeee,AmerSlkrPodcast
 NebrMurderinos,AmerSlkrPodcast
@@ -1411,7 +1413,6 @@ exoplanetarypod,AmerSlkrPodcast
 Power2006d,AmerSlkrPodcast
 ShoutOutLdn,AmerSlkrPodcast
 mitchumpod,AmerSlkrPodcast
-misterjuro,AmerSlkrPodcast
 infointroblog,AmerSlkrPodcast
 Coyotekidx13,AmerSlkrPodcast
 selimhossain971,AmerSlkrPodcast
@@ -1634,7 +1635,6 @@ SilZeroChris,AmerSlkrPodcast
 popternative,AmerSlkrPodcast
 _StrangeSounds,AmerSlkrPodcast
 ReelTalkQuays,AmerSlkrPodcast
-NaiceThings,AmerSlkrPodcast
 HWIDiePod,AmerSlkrPodcast
 CreepOrSleep,AmerSlkrPodcast
 TJunkiesPodcast,AmerSlkrPodcast
