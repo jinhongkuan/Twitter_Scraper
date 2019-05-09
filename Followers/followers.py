@@ -1,3 +1,4 @@
+import threading
 import csv
 from os import listdir
 from os.path import isfile, join
@@ -8,14 +9,22 @@ import datetime
 import os
 # from bs4 import BeautifulSoup
 
+###### CONFIG VARIABLES - Changeable Parameters
+
+max_threads = 5
+max_level = 2
+
+#######
+
 headers = {'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'}
+thread_follower_counts = [0, 0, 0, 0, 0]
 all_done = {}
 
 def main():
-  global headers
   global all_done
-  
-  max_level = 1
+  global max_threads
+  global max_level  
+  global thread_follower_counts
   seen = 0
 
   if not os.path.exists('LogFiles/'):
@@ -29,6 +38,7 @@ def main():
       os.makedirs('result_output/Level' + str(cur_level))
 
     # Generate followers for everyone in cur_files      
+    threads = [None] * max_threads  
     for f in cur_files:
       all_followers = []
       with open("result_output/Level" + str(cur_level-1) + "/" + f, mode='r') as inptr:
@@ -36,22 +46,45 @@ def main():
         for row in reader:
           all_followers.append(row[0])
 
-      for follower in all_followers:
-        # We already have followers then don't recompute
-        if(not(follower in all_done)):
-          seen += generateFollowers(follower, cur_level, log_file)
-          all_done[follower] = True
+      follower_index = 0
+      while follower_index < len(all_followers):        
+        follower = all_followers[follower_index]
+        try:
+          # We already have followers then don't recompute
+          if(not(follower in all_done)):                    
+            # if we have space
+            for thread_num in range(max_threads):
+              if(threads[thread_num] == None or not(threads[thread_num].isAlive())):
+                seen += thread_follower_counts[thread_num]
+                thread_follower_counts[thread_num] = 0
 
-        print("Total nodes processed = ", len(all_done))
-        print("Total edges seen = ", seen)
+                print("\nStart thread for: ", follower, " at ", str(datetime.datetime.now()))
+                threads[thread_num] = threading.Thread(target=generateFollowers, args=(follower, cur_level, log_file, thread_num))
+                threads[thread_num].start()
+                all_done[follower] = True
+
+                follower_index += 1
+                print("Total nodes processed = ", len(all_done))
+                print("Total edges seen = ", seen)
+                break
+          else:
+            follower_index += 1
+                
+        except KeyboardInterrupt:
+          print("Total nodes processed = ", len(all_done))
+          print("Total edges seen = ", seen + sum(thread_follower_counts))
+          raise Exception("Kill")  
+
+    for thread_num in range(max_threads):
+      if(threads[thread_num] != None):
+        threads[thread_num].join()
 
   print("Total nodes processed = " + str(len(all_done)), file = log_file)
   print("Total edges seen = " + str(seen), file = log_file)
 
-def generateFollowers(org, level, log_file):
+def generateFollowers(org, level, log_file, thread_num):
   # Open page
-  link = "https://mobile.twitter.com/" + org + "/followers"
-  
+  link = "https://mobile.twitter.com/" + org + "/followers"  
   try:
     req = Request(link, headers=headers)
     page = urlopen(req)
@@ -82,6 +115,7 @@ def generateFollowers(org, level, log_file):
           # If we had exception on the second try
           # we can be confident that we have all followers
           break
+      thread_follower_counts[thread_num-1] = len(followers)
 
     # Write followers to file
     with open("result_output/Level" + str(level) + "/followers_" + org + ".txt", mode='w', encoding="utf-8") as outptr:
@@ -89,11 +123,12 @@ def generateFollowers(org, level, log_file):
       for follower in followers:
         writer.writerow([follower, org])
 
+    thread_follower_counts[thread_num-1] = len(followers)
     return len(followers)
 
   except urllib.error.HTTPError as e:
-      print("User does not exist anymore: ", org, file = log_file)
-      return 0
+    print("User does not exist anymore: ", org, file = log_file)
+    return 0
 
 # def printPage(req):
 #   page = urlopen(req)
