@@ -3,6 +3,7 @@ Twitter scraper that bypasses normal API limitations
 
 Change Log:
 ```
+(05.09.2019) Added assertions to ensure all followers are scraped
 (05.09.2019) Parellelize and Multithread code
 (05.09.2019) Print out diagnostic information - user being scraped, timestamp, number of followers
 (05.08.2019) Added exception handling for delted users
