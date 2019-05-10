@@ -10,17 +10,14 @@ import datetime
 import os
 from bs4 import BeautifulSoup
 
-######################################################
-###### CONFIG VARIABLES - Changeable Parameters ######
-######################################################
+###### CONFIG VARIABLES - Changeable Parameters
 
 max_threads = 10
 max_level = 1
 max_retry = 10
 epsilon_follower_diff = 10
 
-######################################################
-######################################################
+#######
 
 headers = {'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'}
 thread_follower_counts = [0] * max_threads
@@ -36,9 +33,7 @@ def main():
   if not os.path.exists('LogFiles/'):
       os.makedirs('LogFiles')
 
-  tmp_time = str(datetime.datetime.now())
-  log_file = open("LogFiles/log_file_" + tmp_time, "w")
-  follower_count_file = open("LogFiles/follower_count_" + tmp_time, "w")
+  log_file = open("LogFiles/log_file_" + str(datetime.datetime.now()), "w")
 
   for cur_level in range(1, 1+max_level):
     cur_files = [f for f in listdir("result_output/Level" + str(cur_level-1)) if isfile("result_output/Level" + str(cur_level-1) + "/" + f)]
@@ -67,7 +62,7 @@ def main():
                 thread_follower_counts[thread_num] = 0
 
                 print("\nStart thread for: ", follower, " at ", str(datetime.datetime.now()))
-                threads[thread_num] = threading.Thread(target=generateFollowers, args=(follower, cur_level, log_file, thread_num, follower_count_file))
+                threads[thread_num] = threading.Thread(target=generateFollowers, args=(follower, cur_level, log_file, thread_num))
                 threads[thread_num].start()
                 all_done[follower] = True
 
@@ -81,7 +76,6 @@ def main():
         except KeyboardInterrupt:
           print("Total nodes processed = ", len(all_done))
           log_file.close()
-          follower_count_file.close()
           sys.exit()
           # print("Total edges seen = ", seen + sum(thread_follower_counts))
 
@@ -92,9 +86,8 @@ def main():
   print("Total nodes processed = " + str(len(all_done)), file = log_file)
   print("Total edges seen = " + str(seen), file = log_file)
   log_file.close()
-  follower_count_file.close()
 
-def generateFollowers(org, level, log_file, thread_num, follower_count_file):
+def generateFollowers(org, level, log_file, thread_num):
   global max_retry
   global epsilon_follower_diff
 
@@ -127,8 +120,6 @@ def generateFollowers(org, level, log_file, thread_num, follower_count_file):
         link = "https://mobile.twitter.com/" + doc.xpath('//*[@id="main_content"]/div/div[2]/div/a')[0].get('href')
         req = Request(link, headers=headers)
         page = urlopen(req)
-
-        # Make sure we have a good page read
         while(page.getcode() > 400):
           print(org, link, page.getcode())
           time.sleep(1)
@@ -150,23 +141,6 @@ def generateFollowers(org, level, log_file, thread_num, follower_count_file):
         printPage(page, "Error#" + str(error_count) + "_" + org)
         error_count += 1
         time.sleep(1)
-
-        ##############
-        # Re-open page
-        ##############
-        page = urlopen(req)
-        while(page.getcode() > 400):
-          print(org, link, page.getcode())
-          time.sleep(1)
-          page = urlopen(req)
-
-        # print(page.geturl())
-        doc = lxml.html.fromstring(page.read())
-
-        followers = doc.xpath('//span[@class="username"]/text()')[1:]
-        num_scraped_followers += len(followers)
-        for follower in followers:
-            writer.writerow([follower, org])
         pass
 
     if(abs(num_scraped_followers - num_followers) > epsilon_follower_diff):
@@ -175,7 +149,6 @@ def generateFollowers(org, level, log_file, thread_num, follower_count_file):
       printPage(page, org)
 
     thread_follower_counts[thread_num-1] = num_scraped_followers
-    print(org + ": Display: " + str(num_followers) + " and Scraped:" + str(num_scraped_followers), file = follower_count_file)
     outptr.close()
     return num_scraped_followers
 
