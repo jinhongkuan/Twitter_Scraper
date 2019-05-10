@@ -15,7 +15,7 @@ Change Log:
 TO DO (Code)
 ```
 0. Make sure new script is scraping all followers of a user
-1. Explore memory mapping to reduce RAM overhead
+1. Explore memory mapping to reduce RAM overhead of hashtable
 2. Reflect changes made in Followers into Friends script
 3. Better diagnostic information
 ```
