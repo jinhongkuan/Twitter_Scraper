@@ -76,8 +76,8 @@ def main():
         except KeyboardInterrupt:
           print("Total nodes processed = ", len(all_done))
           log_file.close()
+          sys.exit()
           # print("Total edges seen = ", seen + sum(thread_follower_counts))
-          raise Exception("Kill")  
 
     for thread_num in range(max_threads):
       if(threads[thread_num] != None):
@@ -93,6 +93,8 @@ def generateFollowers(org, level, log_file, thread_num):
 
   # Open page
   link = "https://mobile.twitter.com/" + org + "/followers"  
+  outptr = open("result_output/Level" + str(level) + "/followers_" + org + ".txt", mode='w', encoding="utf-8")
+  writer = csv.writer(outptr, dialect='excel', delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)  
   try:
     req = Request(link, headers=headers)
     page = urlopen(req)
@@ -107,49 +109,55 @@ def generateFollowers(org, level, log_file, thread_num):
 
     # Extract first 20 followers
     followers = doc.xpath('//span[@class="username"]/text()')[1:]
-          
+    num_scraped_followers = len(followers)
+    for follower in followers:
+        writer.writerow([follower, org])
+
     # Click on Show More and continue till we get all followers
     error_count = 0
-    while(len(followers) < num_followers and error_count < max_retry):
+    while(abs(num_scraped_followers - num_followers) > epsilon_follower_diff and error_count < max_retry):
       try:
         link = "https://mobile.twitter.com/" + doc.xpath('//*[@id="main_content"]/div/div[2]/div/a')[0].get('href')
         req = Request(link, headers=headers)
         page = urlopen(req)
+        while(page.getcode() > 400):
+          print(org, link, page.getcode())
+          time.sleep(1)
+          page = urlopen(req)
+
         # print(page.geturl())
         doc = lxml.html.fromstring(page.read())
-        followers += doc.xpath('//span[@class="username"]/text()')[1:]
-      except:
-        if(abs(len(followers) - num_followers) < epsilon_follower_diff):
+
+        followers = doc.xpath('//span[@class="username"]/text()')[1:]
+        num_scraped_followers += len(followers)
+        for follower in followers:
+            writer.writerow([follower, org])
+
+      except Exception as e:
+        if(abs(num_scraped_followers - num_followers) < epsilon_follower_diff):
           break
 
-        printPage(req, "Error#" + str(error_count) + "_" + org)
+        print(e, file = log_file)
+        printPage(page, "Error#" + str(error_count) + "_" + org)
         error_count += 1
-        time.sleep(.025)
+        time.sleep(1)
         pass
 
-    if(abs(len(followers) - num_followers) > epsilon_follower_diff):
-      print("User not fully extracted ", org, len(followers), num_followers, link)
-      print("User not fully extracted ", org, len(followers), num_followers, link, file = log_file)
-      printPage(req, org)
+    if(abs(num_scraped_followers - num_followers) > epsilon_follower_diff):
+      print("User not fully extracted ", org, num_scraped_followers, num_followers, link)
+      print("User not fully extracted ", org, num_scraped_followers, num_followers, link, file = log_file)
+      printPage(page, org)
 
-    # Write followers to file
-    with open("result_output/Level" + str(level) + "/followers_" + org + ".txt", mode='w', encoding="utf-8") as outptr:
-      writer = csv.writer(outptr, dialect='excel', delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-      for follower in followers:
-        writer.writerow([follower, org])
-
-    thread_follower_counts[thread_num-1] = len(followers)
-    return len(followers)
+    thread_follower_counts[thread_num-1] = num_scraped_followers
+    outptr.close()
+    return num_scraped_followers
 
   except urllib.error.HTTPError as e:
+    outptr.close()
     print("User does not exist anymore: ", org, file = log_file)
     return 0
 
-  except:
-    return 0
-
-def printPage(req, name):
-  page = urlopen(req)
+def printPage(page, name):
   soup = BeautifulSoup(page.read(), 'lxml')
   if not os.path.exists('ErrorFiles/'):
     os.makedirs('ErrorFiles')
