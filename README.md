@@ -19,6 +19,7 @@ TO DO (Code)
 1. Reflect changes made in Followers into Friends script      - Priority 8, Urgency 9
 2. Better diagnostic information                              - Priority 8, Urgency 5
 3. Explore memory mapping to reduce RAM overhead of hashtable - Priority 3, Urgency 3
+4. Clean up code                                              - Priority 6, Urgency 1
 ```
 
 TO DO (Others):
