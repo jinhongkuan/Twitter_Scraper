@@ -3,6 +3,7 @@ Twitter scraper that bypasses normal API limitations
 
 Change Log:
 ```
+(05.09.2019) Added assertions to ensure all followers are scraped
 (05.09.2019) Parellelize and Multithread code
 (05.09.2019) Print out diagnostic information - user being scraped, timestamp, number of followers
 (05.08.2019) Added exception handling for delted users
@@ -13,7 +14,10 @@ Change Log:
 
 TO DO (Code)
 ```
-1. Better diagnostic information
+0. Make sure new script is scraping all followers of a user
+1. Explore memory mapping to reduce RAM overhead of hashtable
+2. Reflect changes made in Followers into Friends script
+3. Better diagnostic information
 ```
 
 TO DO (Others):
