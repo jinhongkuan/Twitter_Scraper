@@ -14,7 +14,10 @@ Change Log:
 
 TO DO (Code)
 ```
-1. Better diagnostic information
+0. Make sure new script is scraping all followers of a user
+1. Explore memory mapping to reduce RAM overhead
+2. Reflect changes made in Followers into Friends script
+3. Better diagnostic information
 ```
 
 TO DO (Others):
