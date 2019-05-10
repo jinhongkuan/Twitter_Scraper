@@ -175,7 +175,7 @@ def generateFollowers(org, level, log_file, thread_num, follower_count_file):
       printPage(page, org)
 
     thread_follower_counts[thread_num-1] = num_scraped_followers
-    print(org + ": Display: " + str(num_followers) + " and Scraped:" + str(num_scraped_followers), file = follower_count_file)
+    print(org + ", " + str(num_followers) + ", " + str(num_scraped_followers), file = follower_count_file)
     outptr.close()
     return num_scraped_followers
 
