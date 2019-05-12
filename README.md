@@ -3,6 +3,7 @@ Twitter scraper that bypasses normal API limitations
 
 Change Log:
 ```
+(05.12.2019) Updated friends.py
 (05.12.2019) General Code Cleanup
 (05.12.2019) Added ability to resume code and -reset flag
 (05.10.2019) Ram optimization to reduce follower array overhead
@@ -18,7 +19,6 @@ Change Log:
 TO DO (Code)
 ```
 1. Global multithreading instead of level paralellism         - Priority 7, Urgency 3
-2. Reflect changes made in Followers into Friends script      - Priority 8, Urgency 9
 ```
 
 TO DO (Others):
