@@ -3,6 +3,8 @@ Twitter scraper that bypasses normal API limitations
 
 Change Log:
 ```
+(05.12.2019) General Code Cleanup
+(05.12.2019) Added ability to resume code and -reset flag
 (05.10.2019) Ram optimization to reduce follower array overhead
 (05.09.2019) Added assertions to ensure all followers are scraped
 (05.09.2019) Parellelize and Multithread code
@@ -15,11 +17,8 @@ Change Log:
 
 TO DO (Code)
 ```
-0. Make sure new script is scraping all followers of a user   - Priority 9, Urgency 9
-1. Reflect changes made in Followers into Friends script      - Priority 8, Urgency 9
-2. Better diagnostic information                              - Priority 8, Urgency 5
-3. Explore memory mapping to reduce RAM overhead of hashtable - Priority 3, Urgency 3
-4. Clean up code                                              - Priority 6, Urgency 1
+1. Global multithreading instead of level paralellism         - Priority 7, Urgency 3
+2. Reflect changes made in Followers into Friends script      - Priority 8, Urgency 9
 ```
 
 TO DO (Others):
@@ -28,4 +27,10 @@ TO DO (Others):
 2. Go ove TSM paper
 2. Start collecting AltNews articles
 3. Test a few AltNews articles to check density
+```
+
+Dropped:
+```
+Disk-based Hashtable would have to coded and right now, the RAM overhead is acceptable
+Explore memory mapping to reduce RAM overhead of hashtable - Priority 3, Urgency 1
 ```
