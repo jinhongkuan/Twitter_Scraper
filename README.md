@@ -16,7 +16,6 @@ Change Log:
 
 TO DO (Code)
 ```
-0. Ability to pause and resume code                           - Priority 8, Urgency 2
 1. Global multithreading instead of level paralellism         - Priority 7, Urgency 3
 2. Reflect changes made in Followers into Friends script      - Priority 8, Urgency 9
 3. Better diagnostic information                              - Priority 8, Urgency 5
