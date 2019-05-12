@@ -15,10 +15,10 @@ Change Log:
 
 TO DO (Code)
 ```
-0. Make sure new script is scraping all followers of a user   - Priority 9, Urgency 9
+0. Global multithreading instead of level paralellism         - Priority 7, Urgency 3
 1. Reflect changes made in Followers into Friends script      - Priority 8, Urgency 9
 2. Better diagnostic information                              - Priority 8, Urgency 5
-3. Explore memory mapping to reduce RAM overhead of hashtable - Priority 3, Urgency 3
+3. Explore memory mapping to reduce RAM overhead of hashtable - Priority 3, Urgency 1
 4. Clean up code                                              - Priority 6, Urgency 1
 ```
 
