@@ -15,11 +15,12 @@ Change Log:
 
 TO DO (Code)
 ```
-0. Global multithreading instead of level paralellism         - Priority 7, Urgency 3
-1. Reflect changes made in Followers into Friends script      - Priority 8, Urgency 9
-2. Better diagnostic information                              - Priority 8, Urgency 5
-3. Explore memory mapping to reduce RAM overhead of hashtable - Priority 3, Urgency 1
-4. Clean up code                                              - Priority 6, Urgency 1
+0. Ability to pause and resume code                           - Priority 8, Urgency 2
+1. Global multithreading instead of level paralellism         - Priority 7, Urgency 3
+2. Reflect changes made in Followers into Friends script      - Priority 8, Urgency 9
+3. Better diagnostic information                              - Priority 8, Urgency 5
+4. Explore memory mapping to reduce RAM overhead of hashtable - Priority 3, Urgency 1
+5. Clean up code                                              - Priority 6, Urgency 1
 ```
 
 TO DO (Others):
