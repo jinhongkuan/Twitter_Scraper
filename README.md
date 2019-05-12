@@ -20,7 +20,6 @@ TO DO (Code)
 1. Global multithreading instead of level paralellism         - Priority 7, Urgency 3
 2. Reflect changes made in Followers into Friends script      - Priority 8, Urgency 9
 3. Better diagnostic information                              - Priority 8, Urgency 5
-4. Explore memory mapping to reduce RAM overhead of hashtable - Priority 3, Urgency 1
 ```
 
 TO DO (Others):
@@ -29,4 +28,10 @@ TO DO (Others):
 2. Go ove TSM paper
 2. Start collecting AltNews articles
 3. Test a few AltNews articles to check density
+```
+
+Dropped:
+```
+Disk-based Hashtable would have to coded and right now, the RAM overhead is acceptable
+Explore memory mapping to reduce RAM overhead of hashtable - Priority 3, Urgency 1
 ```
