@@ -3,6 +3,7 @@ Twitter scraper that bypasses normal API limitations
 
 Change Log:
 ```
+(05.12.2019) Added ability to resume code and -reset flag
 (05.10.2019) Ram optimization to reduce follower array overhead
 (05.09.2019) Added assertions to ensure all followers are scraped
 (05.09.2019) Parellelize and Multithread code
