@@ -3,6 +3,7 @@ Twitter scraper that bypasses normal API limitations
 
 Change Log:
 ```
+(05.13.2019) Global parellelism instead of level parellelism
 (05.12.2019) Updated friends.py
 (05.12.2019) General Code Cleanup
 (05.12.2019) Added ability to resume code and -reset flag
@@ -18,7 +19,7 @@ Change Log:
 
 TO DO (Code)
 ```
-1. Global multithreading instead of level paralellism         - Priority 7, Urgency 3
+1. Add Resum functionality to avoid recomputation
 ```
 
 TO DO (Others):
