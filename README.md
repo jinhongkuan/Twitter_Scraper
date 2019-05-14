@@ -19,7 +19,7 @@ Change Log:
 
 TO DO (Code)
 ```
-1. Add Resum functionality to avoid recomputation
+1. Add Resume functionality to avoid recomputation
 ```
 
 TO DO (Others):
