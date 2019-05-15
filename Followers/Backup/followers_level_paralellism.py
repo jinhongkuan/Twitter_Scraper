@@ -1,17 +1,16 @@
-import os
 import sys
-import csv
-import time
-import queue
 import shutil
-import urllib
-import datetime
-import lxml.html
+import time
 import threading
+import csv
 from os import listdir
-from bs4 import BeautifulSoup
 from os.path import isfile, join
+import urllib
 from urllib.request import urlopen, Request
+import lxml.html
+import datetime
+import os
+from bs4 import BeautifulSoup
 
 ######################################################
 ###### CONFIG VARIABLES - Changeable Parameters ######
@@ -61,27 +60,15 @@ def main():
   follower_count_writer = csv.writer(follower_count_file)
   #########################
 
-  for cur_level in range(1, max_level+1):
+  for cur_level in range(start_level, 1 + max_level):
+    cur_files = [f for f in listdir(path + str(cur_level-1)) if isfile(path + str(cur_level-1) + "/" + f)]
     make_directory(path + str(cur_level))
 
-  file_queue = queue.SimpleQueue()
-  file_queue.put(0, "input")
-  
-  # for cur_level in range(start_level, 1 + max_level):
-  threads = [None] * max_threads 
-
-  # Lock for semaphore
-  lock = threading.Lock() 
-  while(not file_queue.empty()):
-      # Accessing queue with semaphore
-      lock.acquire()
-      tmp_level, f = file_queue.get()
-      lock.release()
-
-      file_name = path + str(tmp_level-1) + "/" + f
-
+    # Generate followers for everyone in cur_files      
+    threads = [None] * max_threads  
+    for f in cur_files:
       # Read in all followers of this file
-      with open(file_name, mode='r') as inptr:
+      with open(path + str(cur_level-1) + "/" + f, mode='r') as inptr:
         reader = csv.reader(inptr)
 
         follower = next_follower(reader) # First follower
@@ -94,7 +81,7 @@ def main():
                   num_edges += thread_follower_counts[thread_num]
                   thread_follower_counts[thread_num] = 0
 
-                  threads[thread_num] = threading.Thread(target=generateFollowers, args=(follower, cur_level, thread_num, log_file_writer, follower_count_writer, file_queue, lock))
+                  threads[thread_num] = threading.Thread(target=generateFollowers, args=(follower, cur_level, thread_num, log_file_writer, follower_count_writer))
                   threads[thread_num].start()
                   all_done[follower] = True
 
@@ -114,9 +101,9 @@ def main():
             follower_count_file.close()
             sys.exit()
 
-  for thread_num in range(max_threads):
-    if(threads[thread_num] != None):
-      threads[thread_num].join()
+    for thread_num in range(max_threads):
+      if(threads[thread_num] != None):
+        threads[thread_num].join()
 
   log_file_writer.writerow([]) # Next line
   log_file_writer.writerow(["Total nodes processed: ", str(len(all_done))])
@@ -124,7 +111,7 @@ def main():
   log_file.close()
   follower_count_file.close()
 
-def generateFollowers(org, level, thread_num, log_file_writer, follower_count_writer, file_queue, lock):
+def generateFollowers(org, level, thread_num, log_file_writer, follower_count_writer):
   global max_retry
   global epsilon_diff
 
@@ -157,7 +144,7 @@ def generateFollowers(org, level, thread_num, log_file_writer, follower_count_wr
   followers = doc.xpath('//span[@class="username"]/text()')[1:]
   num_scraped_followers = len(followers)
   for follower in followers:
-    writer.writerow([follower, org])
+      writer.writerow([follower, org])
 
   # Click on Show More and continue till we get all followers
   error_count = 0
@@ -196,12 +183,6 @@ def generateFollowers(org, level, thread_num, log_file_writer, follower_count_wr
   thread_follower_counts[thread_num-1] = num_scraped_followers
   follower_count_writer.writerow([org, str(num_followers), str(num_scraped_followers)])
   outptr.close()
-
-  # Semaphore
-  lock.acquire()
-  file_queue.put(level, "followers_" + org + ".txt")
-  lock.release()
-
   return num_scraped_followers
 
 def reset_folders():
