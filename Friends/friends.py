@@ -129,7 +129,7 @@ def main():
 
           if(follower in global_all_done and follower not in all_done):
             all_done[follower] = True
-            shutil.copy(global_repository + "/followers_" + follower + ".txt", path + str(tmp_level+1))
+            shutil.copy(global_repository + "/friends_" + follower + ".txt", path + str(tmp_level+1))
 
           ############################################################
 
@@ -307,6 +307,7 @@ def generateFollowers(org, level, thread_num, log_file_writer, follower_count_wr
 
   except Exception as e:
     print("\n\n\n\n Exception - Thread Compromised on user ", org, level, thread_num)
+    time.sleep(10)
     return 0
 
 def reset_folders():
