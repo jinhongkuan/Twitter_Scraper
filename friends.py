@@ -96,9 +96,9 @@ def main():
         # Read in all followers of this file
         with open(file_name, mode='r') as inptr:
           reader = csv.reader(inptr)
+          friend = next_friend(reader) # First friend
           while True:        
             try:
-              friend = next_friend(reader) # First friend
               # We already have friends then don't recompute
               if(not(friend in all_done)):
                 for thread_num in range(max_threads): # if we have space
