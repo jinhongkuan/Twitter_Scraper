@@ -96,9 +96,9 @@ def main():
         # Read in all followers of this file
         with open(file_name, mode='r') as inptr:
           reader = csv.reader(inptr)
-          friend = next_friend(reader) # First friend
-          while True:        
-            try:
+          try:
+            friend = next_friend(reader) # First friend
+            while True:        
               # We already have friends then don't recompute
               if(not(friend in all_done)):
                 for thread_num in range(max_threads): # if we have space
@@ -120,11 +120,11 @@ def main():
                   file_queue.put((tmp_level + 1, "friends_" + friend + ".txt"))
                 friend = next_friend(reader)
 
-            except StopIteration:
-              break # We sucessfuly read the whole list
+          except StopIteration:
+            break # We sucessfuly read the whole list
 
-            except KeyboardInterrupt:
-              sys.exit()
+          except KeyboardInterrupt:
+            sys.exit()
 
           while(file_queue.empty() and is_somethread_alive()):
             time.sleep(1)
