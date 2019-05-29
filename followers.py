@@ -23,6 +23,11 @@ max_level = 1          # Depth of graph
 max_retry = 10         # Retries in case of error
 epsilon_diff = 25            
 
+# Controls the percentage of followers to be scraped
+# Eg: {1:100, 2:50} means scrape 100% of the followers
+# at level 1 and 50% of the followers at level 2
+level_restrictions = {1: 100, 2: 10}
+
 global_repository = "./Followers"
         
 ######################################################
@@ -91,13 +96,17 @@ def main():
       lock.release()
 
       file_name = global_repository + "/" + f
-      
+      print(file_name)
       # Read in all followers of this file
       with open(file_name, mode='r') as inptr:
         reader = csv.reader(inptr)
         try:
           follower = next_follower(reader) # First follower
-          while True:        
+        except StopIteration:
+          follower = None
+
+        while (follower != None):        
+          try:
             # We already have followers then don't recompute
             if(not(follower in all_done)):                    
               for thread_num in range(max_threads): # if we have space
@@ -119,11 +128,11 @@ def main():
                 file_queue.put((tmp_level + 1, "followers_" + follower + ".txt"))
               follower = next_follower(reader)
 
-        except StopIteration:
-          break # We sucessfuly read the whole list
+          except StopIteration:
+            break # We sucessfuly read the whole list
 
-        except KeyboardInterrupt:
-          sys.exit()
+          except KeyboardInterrupt:
+            sys.exit()
 
         while(file_queue.empty() and is_somethread_alive()):
           time.sleep(1)
@@ -189,16 +198,17 @@ def generateFollowers(org, level, thread_num, log_file_writer, follower_count_wr
     # Extract first 20 followers
     followers = doc.xpath('//span[@class="username"]/text()')[1:]
     num_scraped_followers = len(followers)
+    num_to_be_scraped = int(num_followers * (float(level_restrictions[level]) / 100.0))
     for follower in followers:
         writer.writerow([follower, org])
 
     # Click on Show More and continue till we get all followers
     error_count = 0
-    while(error_count < max_retry):
+    while(num_scraped_followers < num_to_be_scraped and error_count < max_retry):
       try:
         link = "https://mobile.twitter.com/" + doc.xpath('//*[@id="main_content"]/div/div[2]/div/a')[0].get('href')
       except Exception as e:
-        if(abs(num_scraped_followers - num_followers) < epsilon_diff):
+        if(abs(num_scraped_followers - num_to_be_scraped) < epsilon_diff):
           break
 
         log_file_writer.writerow(["Error: ", e])
@@ -221,10 +231,10 @@ def generateFollowers(org, level, thread_num, log_file_writer, follower_count_wr
       for follower in followers:
           writer.writerow([follower, org])
 
-    if(abs(num_scraped_followers - num_followers) > epsilon_diff):
-      incomplete_scraped_writer.writerow(["User not fully extracted", num_scraped_followers, num_followers, link])
+    if(abs(num_scraped_followers - num_to_be_scraped) > epsilon_diff):
+      incomplete_scraped_writer.writerow(["User not fully extracted", num_scraped_followers, num_followers, num_to_be_scraped, level, link])
       print("\nUser not fully extracted ", org, num_scraped_followers, num_followers, link)
-      log_file_writer.writerow(["\nUser not fully extracted ", org, num_scraped_followers, num_followers, link])
+      log_file_writer.writerow(["\nUser not fully extracted ", org, num_scraped_followers, num_followers, num_to_be_scraped, level, link])
       printPage(page, org)
       outptr.close()      
     else:
@@ -233,7 +243,7 @@ def generateFollowers(org, level, thread_num, log_file_writer, follower_count_wr
       os.remove(global_repository + "/Tmp_Files/followers_" + org + ".txt")
 
     thread_follower_counts[thread_num-1] = num_scraped_followers
-    follower_count_writer.writerow([org, str(num_followers), str(num_scraped_followers)])
+    follower_count_writer.writerow([org, str(num_followers), str(num_to_be_scraped), str(num_scraped_followers)])
     # writer.writerow(["This user has been scraped completely"])
 
     # Semaphore
