@@ -76,7 +76,7 @@ def main():
 
   tmp_time = str(datetime.datetime.now())
 
-  with open("LogFiles/log_file_" + tmp_time, "w") as log_file, open("LogFiles/follower_counts_" + tmp_time, "w") as follower_count_file, open("LogFiles/incomplete_scraped_" + tmp_time, "w") as incomplete_scraped:
+  with open("LogFiles/log_file_" + tmp_time, "w") as log_file, open("LogFiles/follower_counts_" + tmp_time, "w") as follower_count_file, open("LogFiles/incomplete_followers_scraped_" + tmp_time, "w") as incomplete_scraped:
     log_file_writer = csv.writer(log_file)
     follower_count_writer = csv.writer(follower_count_file)
     incomplete_scraped_writer = csv.writer(incomplete_scraped)
