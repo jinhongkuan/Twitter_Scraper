@@ -18,15 +18,21 @@ from urllib.request import urlopen, Request
 ###### CONFIG VARIABLES - Changeable Parameters ######
 ######################################################
 
-max_threads = 10       # How many simultaneous threads
 max_level = 1          # Depth of graph
-max_retry = 10         # Retries in case of error
-epsilon_diff = 25            
 
 # Controls the percentage of followers to be scraped
 # Eg: {1:100, 2:50} means scrape 100% of the followers
 # at level 1 and 50% of the followers at level 2
-level_restrictions = {1: 100, 2: 10}
+max_edges_restriction = {1: 100, 2: 10}
+
+# Controls the number of followers to expand at levels
+# Eg: {1:50} means at level 1, expand only the first
+# 50 users to get the level 2 nodes
+max_expand_restriction = {1:1}
+
+max_threads = 10       # How many simultaneous threads
+max_retry = 10         # Retries in case of error
+epsilon_diff = 25            
 
 global_repository = "./Followers"
         
@@ -37,12 +43,16 @@ headers = {'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWeb
 
 all_done = {}
 num_edges = 0
+expanded_counts = {}
 file_queue = queue.Queue()
 threads = [None] * max_threads 
 thread_follower_counts = [0] * max_threads
 
 def main():   
   global num_edges
+
+  for i in range(max_level + 1):
+    expanded_counts[i] = 0
 
   if("-reset" in sys.argv):
     reset_folders()
@@ -96,7 +106,7 @@ def main():
       lock.release()
 
       file_name = global_repository + "/" + f
-      print(file_name)
+
       # Read in all followers of this file
       with open(file_name, mode='r') as inptr:
         reader = csv.reader(inptr)
@@ -124,8 +134,9 @@ def main():
                   follower = next_follower(reader)
                   break
             else:
-              if(tmp_level + 1 < max_level):
+              if(tmp_level + 1 < max_level and expanded_counts[tmp_level + 1] < max_expand_restriction[tmp_level + 1]):
                 file_queue.put((tmp_level + 1, "followers_" + follower + ".txt"))
+                expanded_counts[tmp_level + 1] = expanded_counts.get(tmp_level + 1, 0) + 1                
               follower = next_follower(reader)
 
           except StopIteration:
@@ -165,7 +176,7 @@ def is_scraping_complete(f, cur_level):
   return False
 
 def generateFollowers(org, level, thread_num, log_file_writer, follower_count_writer, incomplete_scraped_writer, lock):
-  try:
+  # try:
     # Open page
     link = "https://mobile.twitter.com/" + org + "/followers"  
     outptr = open(global_repository + "/Tmp_Files/followers_" + org + ".txt", mode='w', encoding="utf-8")
@@ -198,7 +209,7 @@ def generateFollowers(org, level, thread_num, log_file_writer, follower_count_wr
     # Extract first 20 followers
     followers = doc.xpath('//span[@class="username"]/text()')[1:]
     num_scraped_followers = len(followers)
-    num_to_be_scraped = int(num_followers * (float(level_restrictions[level]) / 100.0))
+    num_to_be_scraped = int(num_followers * (float(max_edges_restriction[level]) / 100.0))
     for follower in followers:
         writer.writerow([follower, org])
 
@@ -247,17 +258,18 @@ def generateFollowers(org, level, thread_num, log_file_writer, follower_count_wr
     # writer.writerow(["This user has been scraped completely"])
 
     # Semaphore
-    if(level < max_level):
+    if(level < max_level and expanded_counts[level] < max_expand_restriction[level]):
       lock.acquire()
       file_queue.put((level, "followers_" + org + ".txt"))
+      expanded_counts[level] = expanded_counts.get(level, 0) + 1      
       lock.release()
 
     return num_scraped_followers
 
-  except Exception as e:
-    print("\n\n\n\n Exception - Thread Compromised on user ", org, level, thread_num)
-    time.sleep(10)
-    return 0
+  # except Exception as e:
+  #   print("\n\n\n\n Exception - Thread Compromised on user ", org, level, thread_num, e)
+  #   time.sleep(10)
+  #   return 0
 
 def reset_folders():
   sub_dirs = [f.path for f in os.scandir("./LogFiles")]

@@ -18,10 +18,21 @@ from urllib.request import urlopen, Request
 ###### CONFIG VARIABLES - Changeable Parameters ######
 ######################################################
 
-max_threads = 10       # How many simultaneous threads
 max_level = 1          # Depth of graph
+
+# Controls the percentage of followers to be scraped
+# Eg: {1:100, 2:50} means scrape 100% of the followers
+# at level 1 and 50% of the followers at level 2
+max_edges_restriction = {1: 100, 2: 10}
+
+# Controls the number of followers to expand at levels
+# Eg: {1:50} means at level 1, expand only the first
+# 50 users to get the level 2 nodes
+max_expand_restriction = {1:1}
+
+max_threads = 10       # How many simultaneous threads
 max_retry = 10         # Retries in case of error
-epsilon_diff = 25 
+epsilon_diff = 25        
 
 global_repository = "./Friends"
         
@@ -32,12 +43,16 @@ headers = {'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWeb
 
 all_done = {}
 num_edges = 0
+expanded_counts = {}
 file_queue = queue.Queue()
 threads = [None] * max_threads 
 thread_friend_counts = [0] * max_threads
 
 def main():   
   global num_edges
+
+  for i in range(max_level + 1):
+    expanded_counts[i] = 0
 
   if("-reset" in sys.argv):
     reset_folders()
@@ -97,7 +112,11 @@ def main():
         reader = csv.reader(inptr)
         try:
           friend = next_friend(reader) # First friend
-          while True:        
+        except StopIteration:
+          friend = None
+
+        while (friend != None):       
+          try:
             # We already have friends then don't recompute
             if(not(friend in all_done)):
               for thread_num in range(max_threads): # if we have space
@@ -115,15 +134,17 @@ def main():
                   friend = next_friend(reader)
                   break
             else:
-              if(tmp_level + 1 < max_level):
+              # If we have not reached expansion capacity
+              if(tmp_level + 1 < max_level and expanded_counts[tmp_level + 1] < max_expand_restriction[tmp_level + 1]):
                 file_queue.put((tmp_level + 1, "friends_" + friend + ".txt"))
+                expanded_counts[tmp_level + 1] = expanded_counts.get(tmp_level + 1, 0) + 1
               friend = next_friend(reader)
 
-        except StopIteration:
-          break # We sucessfuly read the whole list
+          except StopIteration:
+            break # We sucessfuly read the whole list
 
-        except KeyboardInterrupt:
-          sys.exit()
+          except KeyboardInterrupt:
+            sys.exit()
 
         while(file_queue.empty() and is_somethread_alive()):
           time.sleep(1)
@@ -137,7 +158,7 @@ def is_scraping_complete(f, cur_level):
   # if(completed):
   #   return True
 
-  # f = all_strip(f, ["friends_", "friends_", ".txt"])
+  # f = all_strip(f, ["followers_", "friends_", ".txt"])
 
   # try:
   #   link = "https://mobile.twitter.com/" + f + "/followers"
@@ -189,16 +210,17 @@ def generateFriends(org, level, thread_num, log_file_writer, friend_count_writer
     # Extract first 20 friends
     friends = doc.xpath('//span[@class="username"]/text()')[1:]
     num_scraped_friends = len(friends)
+    num_to_be_scraped = int(num_friends * (float(max_edges_restriction[level]) / 100.0))
     for friend in friends:
         writer.writerow([org, friend])
 
     # Click on Show More and continue till we get all friends
     error_count = 0
-    while(error_count < max_retry):
+    while(num_scraped_friends < num_to_be_scraped and error_count < max_retry):
       try:
         link = "https://mobile.twitter.com/" + doc.xpath('//*[@id="main_content"]/div/div[2]/div/a')[0].get('href')
       except Exception as e:
-        if(abs(num_scraped_friends - num_friends) < epsilon_diff):
+        if(abs(num_scraped_friends - num_to_be_scraped) < epsilon_diff):
           break
 
         log_file_writer.writerow(["Error: ", e])
@@ -221,10 +243,10 @@ def generateFriends(org, level, thread_num, log_file_writer, friend_count_writer
       for friend in friends:
           writer.writerow([org, friend])
 
-    if(abs(num_scraped_friends - num_friends) > epsilon_diff):
-      incomplete_scraped_writer.writerow(["User not fully extracted", num_scraped_friends, num_friends, link])
-      print("\nUser not fully extracted ", org, num_scraped_friends, num_friends, link)
-      log_file_writer.writerow(["\nUser not fully extracted ", org, num_scraped_friends, num_friends, link])
+    if(abs(num_scraped_friends - num_to_be_scraped) > epsilon_diff):
+      incomplete_scraped_writer.writerow(["User not fully extracted", num_scraped_friends, num_friends, num_to_be_scraped, level, link])
+      print("\nUser not fully extracted ", org, num_scraped_friends, num_friends, num_to_be_scraped, level, link)
+      log_file_writer.writerow(["\nUser not fully extracted ", org, num_scraped_friends, num_friends, num_to_be_scraped, level, link])
       printPage(page, org)
       outptr.close()      
     else:
@@ -237,15 +259,16 @@ def generateFriends(org, level, thread_num, log_file_writer, friend_count_writer
     # writer.writerow(["This user has been scraped completely"])
 
     # Semaphore
-    if(level < max_level):
+    if(level < max_level and expanded_counts[level] < max_expand_restriction[level]):
       lock.acquire()
       file_queue.put((level, "friends_" + org + ".txt"))
+      expanded_counts[level] = expanded_counts.get(level, 0) + 1
       lock.release()
 
     return num_scraped_friends
 
   except Exception as e:
-    print("\n\n\n\n Exception - Thread Compromised on user ", org, level, thread_num)
+    print("\n\n\n\n Exception - Thread Compromised on user ", org, level, thread_num, e)
     time.sleep(10)
     return 0
 
