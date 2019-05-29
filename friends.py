@@ -46,6 +46,7 @@ def main():
     print("Usage: python3 friends.py -retweetID")
     sys.exit(1)
 
+  make_directory(global_repository) # if it does not already exist  
   make_directory(global_repository + "/Tmp_Files")
   inputID = sys.argv[1][1:]
   with open("retweets_" + inputID + ".txt", "r") as inptr:
@@ -61,7 +62,6 @@ def main():
   # Build Dictionary from Global repository
   #########################################
 
-  make_directory(global_repository) # if it does not already exist
   print("Building Global Dictionary...")
   all_files = [f for f in listdir(global_repository) if isfile(global_repository + "/" + f)]
   for f in all_files:
@@ -76,62 +76,61 @@ def main():
 
   tmp_time = str(datetime.datetime.now())
 
-  with open("LogFiles/log_file_" + tmp_time, "w") as log_file:
-    with open("LogFiles/friend_counts_" + tmp_time, "w") as friend_count_file:
-      log_file_writer = csv.writer(log_file)
-      friend_count_writer = csv.writer(friend_count_file)
-  
+  with open("LogFiles/log_file_" + tmp_time, "w") as log_file, open("LogFiles/friend_counts_" + tmp_time, "w") as friend_count_file, open("LogFiles/incomplete_friends_scraped_", "w") as incomplete_scraped:
+    log_file_writer = csv.writer(log_file)
+    friend_count_writer = csv.writer(friend_count_file)
+    incomplete_scraped_writer = csv.writer(incomplete_scraped)
   #########################
   
-      # Lock for semaphore
-      lock = threading.Lock() 
-      while(not file_queue.empty()):
-        # Accessing queue with semaphore
-        lock.acquire()
-        tmp_level, f = file_queue.get()
-        lock.release()
+    # Lock for semaphore
+    lock = threading.Lock() 
+    while(not file_queue.empty()):
+      # Accessing queue with semaphore
+      lock.acquire()
+      tmp_level, f = file_queue.get()
+      lock.release()
 
-        file_name = global_repository + "/" + f
+      file_name = global_repository + "/" + f
 
-        # Read in all followers of this file
-        with open(file_name, mode='r') as inptr:
-          reader = csv.reader(inptr)
-          try:
-            friend = next_friend(reader) # First friend
-            while True:        
-              # We already have friends then don't recompute
-              if(not(friend in all_done)):
-                for thread_num in range(max_threads): # if we have space
-                  if(threads[thread_num] == None or not(threads[thread_num].isAlive())):
-                    num_edges += thread_friend_counts[thread_num]
-                    thread_friend_counts[thread_num] = 0
+      # Read in all followers of this file
+      with open(file_name, mode='r') as inptr:
+        reader = csv.reader(inptr)
+        try:
+          friend = next_friend(reader) # First friend
+          while True:        
+            # We already have friends then don't recompute
+            if(not(friend in all_done)):
+              for thread_num in range(max_threads): # if we have space
+                if(threads[thread_num] == None or not(threads[thread_num].isAlive())):
+                  num_edges += thread_friend_counts[thread_num]
+                  thread_friend_counts[thread_num] = 0
 
-                    print("\nStart thread for: ", friend, " at ", str(datetime.datetime.now()))
-                    # print("Total nodes processed = ", len(all_done))
+                  print("\nStart thread for: ", friend, " at ", str(datetime.datetime.now()))
+                  # print("Total nodes processed = ", len(all_done))
 
-                    threads[thread_num] = threading.Thread(target=generateFriends, args=(friend, tmp_level+1, thread_num, log_file_writer, friend_count_writer, lock))
-                    threads[thread_num].start()
-                    all_done[friend] = True
+                  threads[thread_num] = threading.Thread(target=generateFriends, args=(friend, tmp_level+1, thread_num, log_file_writer, friend_count_writer, incomplete_scraped_writer, lock))
+                  threads[thread_num].start()
+                  all_done[friend] = True
 
-                    friend = next_friend(reader)
-                    break
-              else:
-                if(tmp_level + 1 < max_level):
-                  file_queue.put((tmp_level + 1, "friends_" + friend + ".txt"))
-                friend = next_friend(reader)
+                  friend = next_friend(reader)
+                  break
+            else:
+              if(tmp_level + 1 < max_level):
+                file_queue.put((tmp_level + 1, "friends_" + friend + ".txt"))
+              friend = next_friend(reader)
 
-          except StopIteration:
-            break # We sucessfuly read the whole list
+        except StopIteration:
+          break # We sucessfuly read the whole list
 
-          except KeyboardInterrupt:
-            sys.exit()
+        except KeyboardInterrupt:
+          sys.exit()
 
-          while(file_queue.empty() and is_somethread_alive()):
-            time.sleep(1)
+        while(file_queue.empty() and is_somethread_alive()):
+          time.sleep(1)
 
-      for thread_num in range(max_threads):
-        if(threads[thread_num] != None):
-          threads[thread_num].join()
+    for thread_num in range(max_threads):
+      if(threads[thread_num] != None):
+        threads[thread_num].join()
 
 def is_scraping_complete(f, cur_level):
   # (completed, scraped_count) = file_line_count(path + str(cur_level) + "/" + f)
@@ -156,7 +155,7 @@ def is_scraping_complete(f, cur_level):
 
   return False
 
-def generateFriends(org, level, thread_num, log_file_writer, friend_count_writer, lock):
+def generateFriends(org, level, thread_num, log_file_writer, friend_count_writer, incomplete_scraped_writer, lock):
   try:
     # Open page
     link = "https://mobile.twitter.com/" + org + "/following"  
@@ -223,7 +222,7 @@ def generateFriends(org, level, thread_num, log_file_writer, friend_count_writer
           writer.writerow([org, friend])
 
     if(abs(num_scraped_friends - num_friends) > epsilon_diff):
-      writer.writerow(["User not fully extracted", num_scraped_friends, num_friends, link])
+      incomplete_scraped_writer.writerow(["User not fully extracted", num_scraped_friends, num_friends, link])
       print("\nUser not fully extracted ", org, num_scraped_friends, num_friends, link)
       log_file_writer.writerow(["\nUser not fully extracted ", org, num_scraped_friends, num_friends, link])
       printPage(page, org)

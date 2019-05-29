@@ -21,7 +21,7 @@ from urllib.request import urlopen, Request
 max_threads = 10       # How many simultaneous threads
 max_level = 1          # Depth of graph
 max_retry = 10         # Retries in case of error
-epsilon_diff = 25 
+epsilon_diff = 25            
 
 global_repository = "./Followers"
         
@@ -76,62 +76,61 @@ def main():
 
   tmp_time = str(datetime.datetime.now())
 
-  with open("LogFiles/log_file_" + tmp_time, "w") as log_file:
-    with open("LogFiles/follower_counts_" + tmp_time, "w") as follower_count_file:
-      log_file_writer = csv.writer(log_file)
-      follower_count_writer = csv.writer(follower_count_file)
-  
+  with open("LogFiles/log_file_" + tmp_time, "w") as log_file, open("LogFiles/follower_counts_" + tmp_time, "w") as follower_count_file, open("LogFiles/incomplete_scraped_" + tmp_time, "w") as incomplete_scraped:
+    log_file_writer = csv.writer(log_file)
+    follower_count_writer = csv.writer(follower_count_file)
+    incomplete_scraped_writer = csv.writer(incomplete_scraped)
   #########################
-  
-      # Lock for semaphore
-      lock = threading.Lock() 
-      while(not file_queue.empty()):
-        # Accessing queue with semaphore
-        lock.acquire()
-        tmp_level, f = file_queue.get()
-        lock.release()
 
-        file_name = global_repository + "/" + f
-        
-        # Read in all followers of this file
-        with open(file_name, mode='r') as inptr:
-          reader = csv.reader(inptr)
-          try:
-            follower = next_follower(reader) # First follower
-            while True:        
-              # We already have followers then don't recompute
-              if(not(follower in all_done)):                    
-                for thread_num in range(max_threads): # if we have space
-                  if(threads[thread_num] == None or not(threads[thread_num].isAlive())):
-                    num_edges += thread_follower_counts[thread_num]
-                    thread_follower_counts[thread_num] = 0
+    # Lock for semaphore
+    lock = threading.Lock() 
+    while(not file_queue.empty()):
+      # Accessing queue with semaphore
+      lock.acquire()
+      tmp_level, f = file_queue.get()
+      lock.release()
 
-                    print("\nStart thread for: ", follower, " at ", str(datetime.datetime.now()))
-                    # print("Total nodes processed = ", len(all_done))
+      file_name = global_repository + "/" + f
+      
+      # Read in all followers of this file
+      with open(file_name, mode='r') as inptr:
+        reader = csv.reader(inptr)
+        try:
+          follower = next_follower(reader) # First follower
+          while True:        
+            # We already have followers then don't recompute
+            if(not(follower in all_done)):                    
+              for thread_num in range(max_threads): # if we have space
+                if(threads[thread_num] == None or not(threads[thread_num].isAlive())):
+                  num_edges += thread_follower_counts[thread_num]
+                  thread_follower_counts[thread_num] = 0
 
-                    threads[thread_num] = threading.Thread(target=generateFollowers, args=(follower, tmp_level+1, thread_num, log_file_writer, follower_count_writer, lock))
-                    threads[thread_num].start()
-                    all_done[follower] = True
+                  print("\nStart thread for: ", follower, " at ", str(datetime.datetime.now()))
+                  # print("Total nodes processed = ", len(all_done))
 
-                    follower = next_follower(reader)
-                    break
-              else:
-                if(tmp_level + 1 < max_level):
-                  file_queue.put((tmp_level + 1, "followers_" + follower + ".txt"))
-                follower = next_follower(reader)
+                  threads[thread_num] = threading.Thread(target=generateFollowers, args=(follower, tmp_level+1, thread_num, log_file_writer, follower_count_writer, incomplete_scraped_writer, lock))
+                  threads[thread_num].start()
+                  all_done[follower] = True
 
-          except StopIteration:
-            break # We sucessfuly read the whole list
+                  follower = next_follower(reader)
+                  break
+            else:
+              if(tmp_level + 1 < max_level):
+                file_queue.put((tmp_level + 1, "followers_" + follower + ".txt"))
+              follower = next_follower(reader)
 
-          except KeyboardInterrupt:
-            sys.exit()
+        except StopIteration:
+          break # We sucessfuly read the whole list
 
-          while(file_queue.empty() and is_somethread_alive()):
-            time.sleep(1)
+        except KeyboardInterrupt:
+          sys.exit()
 
-      for thread_num in range(max_threads):
-        if(threads[thread_num] != None):
-          threads[thread_num].join()
+        while(file_queue.empty() and is_somethread_alive()):
+          time.sleep(1)
+
+    for thread_num in range(max_threads):
+      if(threads[thread_num] != None):
+        threads[thread_num].join()
 
 def is_scraping_complete(f, cur_level):
   (completed, scraped_count) = file_line_count(path + str(cur_level) + "/" + f)
@@ -156,7 +155,7 @@ def is_scraping_complete(f, cur_level):
 
   return False
 
-def generateFollowers(org, level, thread_num, log_file_writer, follower_count_writer, lock):
+def generateFollowers(org, level, thread_num, log_file_writer, follower_count_writer, incomplete_scraped_writer, lock):
   try:
     # Open page
     link = "https://mobile.twitter.com/" + org + "/followers"  
@@ -223,7 +222,7 @@ def generateFollowers(org, level, thread_num, log_file_writer, follower_count_wr
           writer.writerow([follower, org])
 
     if(abs(num_scraped_followers - num_followers) > epsilon_diff):
-      writer.writerow(["User not fully extracted", num_scraped_followers, num_followers, link])
+      incomplete_scraped_writer.writerow(["User not fully extracted", num_scraped_followers, num_followers, link])
       print("\nUser not fully extracted ", org, num_scraped_followers, num_followers, link)
       log_file_writer.writerow(["\nUser not fully extracted ", org, num_scraped_followers, num_followers, link])
       printPage(page, org)
