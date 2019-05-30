@@ -50,7 +50,6 @@ thread_follower_counts = [0] * max_threads
 
 def main():   
   global num_edges
-
   if(len(sys.argv) == 3):
     # Being used as follower2.py
     max_edges_restriction[1] = int(sys.argv[2][1:])
@@ -80,12 +79,12 @@ def main():
   # Build Dictionary from Global repository
   #########################################
 
-  make_directory(global_repository) # if it does not already exist
-  print("Building Global Dictionary...")
-  all_files = [f for f in listdir(global_repository) if isfile(global_repository + "/" + f)]
-  for f in all_files:
-    all_done[all_strip(f, ["followers_", "friends_", ".txt"])] = True
-  print("Global dictionary built.\n")
+  # make_directory(global_repository) # if it does not already exist
+  # print("Building Global Dictionary...")
+  # all_files = [f for f in listdir(global_repository) if isfile(global_repository + "/" + f)]
+  # for f in all_files:
+  #   all_done[all_strip(f, ["followers_", "friends_", ".txt"])] = True
+  # print("Global dictionary built.\n")
   #########################################
 
   #########################
@@ -122,7 +121,7 @@ def main():
         while (follower != None):        
           try:
             # We already have followers then don't recompute
-            if(not(follower in all_done)):                    
+            if(not already_scraped(follower)):
               for thread_num in range(max_threads): # if we have space
                 if(threads[thread_num] == None or not(threads[thread_num].isAlive())):
                   num_edges += thread_follower_counts[thread_num]
@@ -133,7 +132,7 @@ def main():
 
                   threads[thread_num] = threading.Thread(target=generateFollowers, args=(follower, tmp_level+1, thread_num, log_file_writer, follower_count_writer, incomplete_scraped_writer, lock))
                   threads[thread_num].start()
-                  all_done[follower] = True
+                  # all_done[follower] = True
 
                   follower = next_follower(reader)
                   break
@@ -180,7 +179,7 @@ def is_scraping_complete(f, cur_level):
   return False
 
 def generateFollowers(org, level, thread_num, log_file_writer, follower_count_writer, incomplete_scraped_writer, lock):
-  # try:
+  try:
     # Open page
     link = "https://mobile.twitter.com/" + org + "/followers"  
     outptr = open(global_repository + "/Tmp_Files/followers_" + org + ".txt", mode='w', encoding="utf-8")
@@ -273,10 +272,18 @@ def generateFollowers(org, level, thread_num, log_file_writer, follower_count_wr
 
     return num_scraped_followers
 
-  # except Exception as e:
-  #   print("\n\n\n\n Exception - Thread Compromised on user ", org, level, thread_num, e)
-  #   time.sleep(10)
-  #   return 0
+  except Exception as e:
+    print("\n\n\n\n Exception - Thread Compromised on user ", org, level, thread_num, e)
+    time.sleep(10)
+    return 0
+
+def already_scraped(user):
+  return isfile(global_repository + "/followers_" + user + ".txt") or isfile(global_repository + "/Tmp_Files/followers_" + user + ".txt")
+  # try:
+  #   fh = open(global_repository + "/followers_" + user + ".txt", "r")
+  #   return True
+  # except FileNotFoundError:
+  #   return False
 
 def reset_folders():
   sub_dirs = [f.path for f in os.scandir("./LogFiles")]
@@ -339,3 +346,8 @@ def all_strip(s, l):
 
 if __name__=="__main__":
   main()
+
+  # link = "http://mobile.twitter.com/PreranaSr"
+  # req = Request(link, headers=headers)
+  # page = urlopen(req)
+  # printPage(page, "BarackObama Mobile")

@@ -41,12 +41,12 @@ global_repository = "./Friends"
 
 headers = {'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'}
 
-all_done = {}
+# all_done = {}
 num_edges = 0
 expanded_counts = {}
 file_queue = queue.Queue()
 threads = [None] * max_threads 
-thread_friend_counts = [0] * max_threads
+thread_friend_counts = [0] * max_threads  
 
 def main():   
   global num_edges
@@ -81,11 +81,11 @@ def main():
   # Build Dictionary from Global repository
   #########################################
 
-  print("Building Global Dictionary...")
-  all_files = [f for f in listdir(global_repository) if isfile(global_repository + "/" + f)]
-  for f in all_files:
-    all_done[all_strip(f, ["followers_", "friends_", ".txt"])] = True
-  print("Global dictionary built.\n")
+  # print("Building Global Dictionary...")
+  # all_files = [f for f in listdir(global_repository) if isfile(global_repository + "/" + f)]
+  # for f in all_files:
+  #   all_done[all_strip(f, ["followers_", "friends_", ".txt"])] = True
+  # print("Global dictionary built.\n")
   #########################################
 
   #########################
@@ -122,7 +122,7 @@ def main():
         while (friend != None):       
           try:
             # We already have friends then don't recompute
-            if(not(friend in all_done)):
+            if(not already_scraped(friend)):            
               for thread_num in range(max_threads): # if we have space
                 if(threads[thread_num] == None or not(threads[thread_num].isAlive())):
                   num_edges += thread_friend_counts[thread_num]
@@ -133,7 +133,7 @@ def main():
 
                   threads[thread_num] = threading.Thread(target=generateFriends, args=(friend, tmp_level+1, thread_num, log_file_writer, friend_count_writer, incomplete_scraped_writer, lock))
                   threads[thread_num].start()
-                  all_done[friend] = True
+                  # all_done[friend] = True
 
                   friend = next_friend(reader)
                   break
@@ -185,6 +185,10 @@ def generateFriends(org, level, thread_num, log_file_writer, friend_count_writer
     # Open page
     link = "https://mobile.twitter.com/" + org + "/following"  
     outptr = open(global_repository + "/Tmp_Files/friends_" + org + ".txt", mode='w', encoding="utf-8")
+    # Close it once so that other threads do not scrape the same user
+    outptr.close()
+    outptr = open(global_repository + "/Tmp_Files/friends_" + org + ".txt", mode='w', encoding="utf-8")
+
     writer = csv.writer(outptr, dialect='excel', delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)  
     
     try:
@@ -278,6 +282,9 @@ def generateFriends(org, level, thread_num, log_file_writer, friend_count_writer
     print("\n\n\n\n Exception - Thread Compromised on user ", org, level, thread_num, e)
     time.sleep(10)
     return 0
+
+def already_scraped(user):
+  return isfile(global_repository + "/friends_" + user + ".txt") or (isfile(global_repository + "/Tmp_Files/friends_" + user + ".txt"))
 
 def reset_folders():
   sub_dirs = [f.path for f in os.scandir("./LogFiles")]
