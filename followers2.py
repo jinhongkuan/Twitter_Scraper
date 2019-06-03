@@ -21,8 +21,10 @@ from urllib.request import urlopen, Request
 max_level = 1          # Depth of graph
 
 # Controls the percentage of followers to be scraped
-# Eg: {1:100, 2:50} means scrape 100% of the followers
-# at level 1 and 50% of the followers at level 2
+# Eg: {1:(10000, 10}, 2:(5000, 5)} means scrape 
+# 10000 + (10/100) * total_followers of the followers
+# at level 1 and 5000 + (5/100) * total_followers 
+# of the followers at level 2
 max_edges_restriction = {1: float('inf')}
 
 # Controls the number of followers to expand at levels
@@ -50,9 +52,9 @@ thread_follower_counts = [0] * max_threads
 
 def main():   
   global num_edges
-  if(len(sys.argv) == 3):
+  if(len(sys.argv) == 4):
     # Being used as follower2.py
-    max_edges_restriction[1] = int(sys.argv[2][1:])
+    max_edges_restriction[1] = (int(sys.argv[2][1:]), int(sys.argv[3][1:]))
 
   for i in range(max_level + 1):
     expanded_counts[i] = 0
@@ -212,8 +214,8 @@ def generateFollowers(org, level, thread_num, log_file_writer, follower_count_wr
     # Extract first 20 followers
     followers = doc.xpath('//span[@class="username"]/text()')[1:]
     num_scraped_followers = len(followers)
-    # As constant
-    num_to_be_scraped = min(num_followers, max_edges_restriction[level])
+    # As constant + percentage * total    
+    num_to_be_scraped = min(num_followers, int(max_edges_restriction[level][0] + (max_edges_restriction[level][1] / 100.0) * num_followers))
     # If as percentage
     # num_to_be_scraped = int(num_followers * (float(max_edges_restriction[level]) / 100.0))
     for follower in followers:

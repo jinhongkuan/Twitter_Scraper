@@ -20,15 +20,18 @@ from urllib.request import urlopen, Request
 
 max_level = 1          # Depth of graph
 
-# Controls the percentage of followers to be scraped
-# Eg: {1:100, 2:50} means scrape 100% of the followers
-# at level 1 and 50% of the followers at level 2
+# Controls the percentage of friends to be scraped
+# Eg: {1:(10000, 10}, 2:(5000, 5)} means scrape 
+# 10000 + (10/100) * total_friends of the friends
+# at level 1 and 5000 + (5/100) * total_friends 
+# of the friends at level 2
 max_edges_restriction = {1: float('inf')}
 
-# Controls the number of followers to expand at levels
+# Controls the number of friends to expand at levels
 # Eg: {1:50} means at level 1, expand only the first
 # 50 users to get the level 2 nodes
 max_expand_restriction = {}
+
 
 max_threads = 10       # How many simultaneous threads
 max_retry = 10         # Retries in case of error
@@ -51,9 +54,9 @@ thread_friend_counts = [0] * max_threads
 def main():   
   global num_edges
 
-  if(len(sys.argv) == 3):
+  if(len(sys.argv) == 4):
     # Being used as follower2.py
-    max_edges_restriction[1] = int(sys.argv[2][1:])
+    max_edges_restriction[1] = (int(sys.argv[2][1:]), float(sys.argv[3][1:]))
 
   for i in range(max_level + 1):
     expanded_counts[i] = 0
@@ -218,8 +221,8 @@ def generateFriends(org, level, thread_num, log_file_writer, friend_count_writer
     # Extract first 20 friends
     friends = doc.xpath('//span[@class="username"]/text()')[1:]
     num_scraped_friends = len(friends)
-    # As constant
-    num_to_be_scraped = min(num_friends, max_edges_restriction[level])
+    # As constant + percentage * total    
+    num_to_be_scraped = min(num_friends, int(max_edges_restriction[level][0] + (max_edges_restriction[level][1] / 100.0) * num_friends))
     # If as percentage
     # num_to_be_scraped = int(num_friends * (float(max_edges_restriction[level]) / 100.0))      
     for friend in friends:
