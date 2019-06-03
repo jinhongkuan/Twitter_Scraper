@@ -25,7 +25,7 @@ max_level = 1          # Depth of graph
 # 10000 + (10/100) * total_friends of the friends
 # at level 1 and 5000 + (5/100) * total_friends 
 # of the friends at level 2
-max_edges_restriction = {1: float('inf')}
+max_edges_restriction = {1: (0, 100)}
 
 # Controls the number of friends to expand at levels
 # Eg: {1:50} means at level 1, expand only the first
