@@ -68,17 +68,18 @@ def main():
     print("Usage: python3 friends.py -retweetID")
     sys.exit(1)
 
-  make_directory(global_repository) # if it does not already exist  
+  tmp_time = str(datetime.datetime.now())
+
   make_directory(global_repository + "/Tmp_Files")
   inputID = sys.argv[1][1:]
   with open("retweets_" + inputID + ".txt", "r") as inptr:
     reader = csv.reader(inptr)
-    with open(global_repository + "/Tmp_Files/tmp_input_file", "w") as input_tmp_file:
+    with open(global_repository + "/Tmp_Files/tmp_input_file_" + tmp_time, "w") as input_tmp_file:
       writer = csv.writer(input_tmp_file)
       for row in reader:
-        writer.writerow(["dummy", row[2]])
+        writer.writerow([row[2]])
 
-  file_queue.put((0, "Tmp_Files/tmp_input_file"))
+  file_queue.put("Tmp_Files/tmp_input_file_" + tmp_time)
 
   #########################################      
   # Build Dictionary from Global repository
