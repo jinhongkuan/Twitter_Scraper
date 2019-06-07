@@ -77,9 +77,9 @@ def main():
     with open(global_repository + "/Tmp_Files/tmp_input_file_" + tmp_time, "w") as input_tmp_file:
       writer = csv.writer(input_tmp_file)
       for row in reader:
-        writer.writerow([row[2]])
+        writer.writerow(["dummy", row[2]])
 
-  file_queue.put("Tmp_Files/tmp_input_file_" + tmp_time)
+  file_queue.put((0, "Tmp_Files/tmp_input_file_" + tmp_time))
 
   #########################################      
   # Build Dictionary from Global repository
@@ -96,8 +96,6 @@ def main():
   #### Open Log Files ####
   #########################  
   make_directory('LogFiles')
-
-  tmp_time = str(datetime.datetime.now())
 
   with open("LogFiles/log_file_" + tmp_time, "w") as log_file, open("LogFiles/friend_counts_" + tmp_time, "w") as friend_count_file, open("LogFiles/incomplete_friends_scraped_" + tmp_time, "w") as incomplete_scraped:
     log_file_writer = csv.writer(log_file)

@@ -77,9 +77,9 @@ def main():
     with open(global_repository + "/Tmp_Files/tmp_input_file_" + tmp_time, "w") as input_tmp_file:
       writer = csv.writer(input_tmp_file)
       for row in reader:
-        writer.writerow([row[2]])
+        writer.writerow(["dummy", row[2]])        
 
-  file_queue.put("Tmp_Files/tmp_input_file_" + tmp_time)
+  file_queue.put((0, "Tmp_Files/tmp_input_file_" + tmp_time))
 
   #########################################      
   # Build Dictionary from Global repository
